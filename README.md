@@ -19,8 +19,8 @@
     * Yulei writes the client part, writen() function, test and debug. Yulei also helped with the readsline() and fork() function to fulfill the Homework's requirement.
 
 * Test Case:
-    * Ipute line of text terminated by a newline. (Passed)
+    * Input line of text terminated by a newline. (Passed)
     * Line of text the maximum line length without a newline. In our works, the maximum line length is 10. (Passed)
     * Line with no characters and EOF. (Passed)
-    * Client termniated after entering text. (Passed)
+    * Client terminated after entering text. (Passed)
     * 3 Clients connected to the server. (Passed)
