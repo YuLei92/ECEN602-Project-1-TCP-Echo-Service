@@ -19,6 +19,53 @@
     I don't know that the return number should be just of the number of character we send or plus one additional.
     In this function, I choose n + 1.
 */
+int readline(int socket_id, char* buf_read, int n){
+    char *read_buf;
+    int buf_shift = 0;
+    int read_state = 0;
+    char read_char;
+    if (n <= 0 || read_buf == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+    
+    int read_no = 0;
+    read_buf = buf_read;
+    
+    while(read_no < n - 1){
+        read_state = read(socket_id, &read_char, 1);
+//        putchar(read_char);
+        
+        if(read_state == -1){// check the error
+            if(errno == EINTR){
+                continue;
+            }else{
+                return -1;
+            }
+        }
+        
+        if(read_char == '\n'){ // if receive '\n'
+            break;
+        }
+    
+        if(read_state == 0){ //Check EOF
+            if(read_no == 0){
+                return 0;
+            }else{
+                break;
+            }
+        }
+
+        *read_buf = read_char;
+        read_buf++;
+        read_no++;
+    }
+//    printf("The len of received bytes is  %d\n",read_no);
+    *read_buf = '\n';
+    read_buf++;
+    *read_buf = '\0';
+    return read_no;
+}
 
 int writen(int socket_id, char* buf_write, int n){
     char* write_buf = buf_write;
@@ -44,7 +91,6 @@ int writen(int socket_id, char* buf_write, int n){
 int main(int argc, char* argv[]){
     struct sockaddr_in sin;
     char *host;
-    char buf_write[MAX_LINE];
     int socket_id;
     char* port_no;
     char* server_address;
@@ -82,11 +128,17 @@ int main(int argc, char* argv[]){
     }
     
     int write_len;
-    
+    int read_len;
+    char buf_write[MAX_LINE];
+    char buf_recv[MAX_LINE];
     while(fgets(buf_write, sizeof(buf_write), stdin)){
         buf_write[MAX_LINE - 1] = '\0';
         len = strlen(buf_write);
         write_len = writen(socket_id, buf_write, len);
-        printf("The len of sended bytes is  %d\n",write_len);
+/*        if(read_len = readline(socket_id, buf_recv, len)){
+           printf("Received echo!\n");
+           fputs(buf_recv, stdout);
+           
+        }*/
     }
 }

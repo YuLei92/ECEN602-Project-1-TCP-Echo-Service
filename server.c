@@ -12,14 +12,86 @@
 #define MAX_LINE 10
 #define MAX_PEDING 10
 
+// n is MAX_LINE
+int readline(int socket_id, char* buf_read, int n){
+    char *read_buf;
+    int buf_shift = 0;
+    int read_state = 0;
+    char read_char;
+    if (n <= 0 || read_buf == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+    
+    int read_no = 0;
+    read_buf = buf_read;
+    
+    while(read_no < n - 1){
+        read_state = read(socket_id, &read_char, 1);
+//        putchar(read_char);
+        
+        if(read_state == -1){// check the error
+            if(errno == EINTR){
+                continue;
+            }else{
+                return -1;
+            }
+        }
+        
+        if(read_char == '\n'){ // if receive '\n'
+            break;
+        }
+    
+        if(read_state == 0){ //Check EOF
+            if(read_no == 0){
+                return 0;
+            }else{
+                break;
+            }
+        }
+
+        *read_buf = read_char;
+        read_buf++;
+        read_no++;
+    }
+//    printf("The len of received bytes is  %d\n",read_no);
+    *read_buf = '\n';
+    read_buf++;
+    *read_buf = '\0';
+    return read_no;
+}
+
+
+
+int writen(int socket_id, char* buf_write, int n){
+    char* write_buf = buf_write;
+    int num_left = n;
+    int write_num;
+    while(num_left > 0){
+        write_num = write(socket_id, write_buf, num_left);
+        
+        if(write_num < 0 && errno != EINTR){
+            return -1;
+        }
+        
+        if(errno == EINTR){
+            write_num = 0;
+        }
+        num_left -= write_num;
+        write_buf += write_num;
+    }
+    return n - num_left;
+}
+
+
 //run : ./Server <port no.>
 int main(int argc, char* argv[]){
     struct sockaddr_in sin;
-    char buf[MAX_LINE];
     int len;
     char* port_no;
     int socket_id, new_socket_id; //This is the socket
-    
+    char buf[MAX_LINE];
+    char buf_write[MAX_LINE];
     if(argc != 2){
         fprintf(stderr, "usage: simplex - talk host\n");
         exit(0);
@@ -55,13 +127,16 @@ int main(int argc, char* argv[]){
         perror("Unable to find client\n");
     }
     
+    int write_len = 0;
     while(1){
         if((new_socket_id = accept(socket_id,(struct sockaddr *)&sin, &len)) <0){
             perror("simplex - talk: accept\n");
             exit(0);
         }
-        while(len = recv(new_socket_id, buf, sizeof(buf), 0))
+       while(len = readline(new_socket_id, buf, sizeof(buf) - 1)){
             fputs(buf, stdout);
+         //   write_len = writen(socket_id, buf_write, len);
+        }
         close(new_socket_id);
     }
 }
