@@ -9,12 +9,13 @@
 #include <errno.h>
 #include <strings.h>
 #include <string.h>
-#define MAX_LINE 10
+#define MAX_LENGTH 10 
 #define MAX_PEDING 10
 
-// n is MAX_LINE
+// n is MAX_LENGTH + 2
 int readline(int socket_id, char* buf_read, int n){
     char *read_buf;
+//    memset(read_buf, 0, n);
     int buf_shift = 0;
     int read_state = 0;
     char read_char;
@@ -65,6 +66,10 @@ int readline(int socket_id, char* buf_read, int n){
 
 int writen(int socket_id, char* buf_write, int n){
     char* write_buf = buf_write;
+    if (n <= 0 || write_buf == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
     int num_left = n;
     int write_num;
     while(num_left > 0){
@@ -77,12 +82,36 @@ int writen(int socket_id, char* buf_write, int n){
         if(errno == EINTR){
             write_num = 0;
         }
+        
         num_left -= write_num;
         write_buf += write_num;
     }
     return n - num_left;
 }
 
+void subprocess(int socket){
+//    printf("Try to get...");
+    int len, lenw;
+    char buf[MAX_LENGTH + 2];
+    memset(buf, 0, MAX_LENGTH + 2);
+    while(len = readline(socket, buf, MAX_LENGTH + 2)){
+        if(len < 0){
+            printf("Error when receiving from the client!");
+            exit(1);
+        }else if(len == 0){
+          printf("A connection has been shut off.");
+            exit(1);
+        }else{
+            printf("Message from one client is: ");
+            fputs(buf, stdout);
+        }
+        lenw = writen(socket, buf, len);
+        if(lenw < 0){
+            printf("Unable to send message to client...");
+            exit(1);
+        }
+    }
+}
 
 //run : ./Server <port no.>
 int main(int argc, char* argv[]){
@@ -90,8 +119,8 @@ int main(int argc, char* argv[]){
     int len;
     char* port_no;
     int socket_id, new_socket_id; //This is the socket
-    char buf[MAX_LINE];
-    char buf_write[MAX_LINE];
+//we don't need buf in the main.
+    
     if(argc != 2){
         fprintf(stderr, "usage: simplex - talk host\n");
         exit(0);
@@ -112,7 +141,6 @@ int main(int argc, char* argv[]){
     }
     printf("Socket successfully created!\n");
     
- //   printf("Listening to the client...");
     
     if((bind(socket_id, (struct sockaddr *)&sin, sizeof(sin))) < 0){
         perror("simplex -talk: bind\n");
@@ -124,7 +152,7 @@ int main(int argc, char* argv[]){
     printf("Listening to the client...\n");
     
     if(listen(socket_id, MAX_PEDING)< 0){
-        perror("Unable to find client\n");
+        perror("Cannot find the client!\n");
     }
     
     int write_len = 0;
@@ -133,10 +161,19 @@ int main(int argc, char* argv[]){
             perror("simplex - talk: accept\n");
             exit(0);
         }
-       while(len = readline(new_socket_id, buf, sizeof(buf) - 1)){
-            fputs(buf, stdout);
-         //   write_len = writen(socket_id, buf_write, len);
+        
+        int pid = fork();
+        
+        if(pid < 0){
+            perror("Failure to fork");
         }
-        close(new_socket_id);
+        if (pid == 0) { // The child process is generated.
+            subprocess(new_socket_id); // Fork successfully and try to handle the messages
+            exit(0);
+        }
+        else {
+             close(new_socket_id);
+        }
+        
     }
 }
