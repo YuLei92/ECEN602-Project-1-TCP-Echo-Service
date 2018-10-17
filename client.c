@@ -150,10 +150,12 @@ int main(int argc, char* argv[]){
         }
 //        buf_write[MAX_LENGTH] = '\0';
         write_len = writen(socket_id, buf_write, len);
-        if(read_len = readline(socket_id, buf_recv, len)){
-           printf("Received echo from the server : ");
-           fputs(buf_recv, stdout);
-           break;
+        while(1){
+            if(read_len = readline(socket_id, buf_recv, len)){
+                printf("Received echo from the server : ");
+                fputs(buf_recv, stdout);
+                break;
+            }
         }
     }
     close(socket_id);
