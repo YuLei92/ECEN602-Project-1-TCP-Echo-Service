@@ -119,6 +119,7 @@ int main(int argc, char* argv[]){
     int len;
     char* port_no;
     int socket_id, new_socket_id; //This is the socket
+    pid_t ppid, pid;
 //we don't need buf in the main.
     
     if(argc != 2){
@@ -162,6 +163,28 @@ int main(int argc, char* argv[]){
             exit(0);
         }
         
+        ppid = fork();
+        
+        if(ppid < 0){
+            perror("Failure to fork 1");
+            exit(0);
+        }
+        if (ppid == 0) { // The child process is generated.
+            pid = fork();
+            if(pid < 0){
+                perror("Failure to fork 1");
+            }
+            if(pid == 0){
+                subprocess(new_socket_id); // Fork successfully and try to handle the messages
+                exit(0);
+                }
+        }
+        else{
+             close(new_socket_id);
+        }
+        
+        /*
+        
         int pid = fork();
         
         if(pid < 0){
@@ -174,6 +197,7 @@ int main(int argc, char* argv[]){
         else {
              close(new_socket_id);
         }
+        */
         
     }
 }
