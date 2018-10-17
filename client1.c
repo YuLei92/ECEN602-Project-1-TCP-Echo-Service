@@ -61,7 +61,7 @@ int readline(int socket_id, char* buf_read, int n){
     }
 //    printf("The len of received bytes is  %d\n",read_no);
     *read_buf = '\n';
-    read_buf++;
+     read_buf++;
     *read_buf = '\0';
     return read_no;
 }
@@ -99,7 +99,7 @@ int main(int argc, char* argv[]){
     char* port_no;
     char* server_address;
     int len;
-    char buf_write[MAX_LENGTH + 2];
+    char buf_write[MAX_LENGTH + 1];
     char buf_recv[MAX_LENGTH + 2];
     
     if(argc != 3){
@@ -142,18 +142,21 @@ int main(int argc, char* argv[]){
             break;
         }
         len = strlen(buf_write);
-        
+        /*
         if((strlen(buf_write) == (MAX_LENGTH + 1))&& buf_write[MAX_LENGTH] != '\n'){
             fputs("The input is to long, please try again！\n", stdout);
             __fpurge(stdin);
             continue;
         }
+        */
 //        buf_write[MAX_LENGTH] = '\0';
         write_len = writen(socket_id, buf_write, len);
-        if(read_len = readline(socket_id, buf_recv, len)){
-           printf("Received echo from the server : ");
-           fputs(buf_recv, stdout);
-           break;
+        while(1){
+            if(read_len = readline(socket_id, buf_recv, len + 1)){
+                printf("Received echo from the server : ");
+                fputs(buf_recv, stdout);
+                break;
+            }
         }
     }
     close(socket_id);

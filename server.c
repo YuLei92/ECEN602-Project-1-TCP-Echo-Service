@@ -55,10 +55,12 @@ int readline(int socket_id, char* buf_read, int n){
         read_buf++;
         read_no++;
     }
+    
 //    printf("The len of received bytes is  %d\n",read_no);
     *read_buf = '\n';
     read_buf++;
     *read_buf = '\0';
+    
     return read_no;
 }
 
@@ -92,9 +94,9 @@ int writen(int socket_id, char* buf_write, int n){
 void subprocess(int socket){
 //    printf("Try to get...");
     int len, lenw;
-    char buf[MAX_LENGTH + 2];
+    char buf[MAX_LENGTH + 1];
     memset(buf, 0, MAX_LENGTH + 2);
-    while(len = readline(socket, buf, MAX_LENGTH + 2)){
+    while(len = readline(socket, buf, MAX_LENGTH + 1)){
         if(len < 0){
             printf("Error when receiving from the client!");
             exit(1);
@@ -105,7 +107,7 @@ void subprocess(int socket){
             printf("Message from one client is: ");
             fputs(buf, stdout);
         }
-        lenw = writen(socket, buf, len);
+        lenw = writen(socket, buf, len + 1);
         if(lenw < 0){
             printf("Unable to send message to client...");
             exit(1);
